@@ -1,29 +1,16 @@
 from werkzeug.security import check_password_hash
 from datetime import datetime, timedelta
 import jwt
-
-from app.database import get_db
+from ..database import get_db
+import os
 
 class Usuario:
-    """
-    Clase que representa a un usuario del sistema.
-    """
-    def __init__(self, nombre, apellido, fecha_nacimiento, email, password, telefono, nacionalidad, domicilio, rol, id=None):
-        """
-        Inicializa un nuevo objeto Usuario con los atributos proporcionados.
+    
+    #Representa un usuario del sistema con métodos para autenticación, gestión de JWT, operaciones de base de datos y serialización.
 
-        Args:
-        - nombre (str): Nombre del usuario.
-        - apellido (str): Apellido del usuario.
-        - fecha_nacimiento (str): Fecha de nacimiento del usuario en formato YYYY-MM-DD.
-        - email (str): Correo electrónico del usuario.
-        - password (str): Contraseña del usuario (almacenada como hash).
-        - telefono (str): Número de teléfono del usuario.
-        - nacionalidad (str): Nacionalidad del usuario.
-        - domicilio (str): Domicilio del usuario.
-        - rol (str): Rol del usuario ('empleado', 'cliente', etc.).
-        - id (int, opcional): Identificador único del usuario en la base de datos.
-        """
+
+    def __init__(self, nombre, apellido, fecha_nacimiento, email, password, telefono, nacionalidad, domicilio, rol, id=None):
+        # Inicializa un objeto Usuario con los atributos especificados.
         self.id = id
         self.nombre = nombre
         self.apellido = apellido
@@ -37,58 +24,42 @@ class Usuario:
 
 
     """
-        Funcion autenticate(email, password)
-        Verifica las credenciales del usuario y devuelve el objeto Usuario si las credenciales son correctas.
-
-        Args:
-        - email (str): Correo electrónico del usuario.
-        - password (str): Contraseña del usuario (sin cifrar).
-
-        Returns:
-        - Usuario: Objeto Usuario si las credenciales son válidas y el rol es 'empleado', None en caso contrario.
+     Authenticate(email, password): Método estático para autenticar a un usuario por email y contraseña.
+    Returns:
+        - str: Token JWT si la autenticación es exitosa y el usuario tiene rol 'empleado', None en caso contrario.
     """
     @staticmethod
     def authenticate(email, password):
         user = Usuario.find_by_email(email)
         if user and check_password_hash(user.password, password):
             if user.rol == 'empleado':
-                return user
+                return user.generate_jwt()
         return None
 
 
-
     """
-        Funcion generate_jwt(self)
-        Genera un token JWT (JSON Web Token) con información del usuario.
-
-        Returns:
-        - str: Token JWT codificado.
+    generate_jwt(): Genera un token JWT para el usuario actual.
+        Genera un token JWT para el usuario actual.
     """
     def generate_jwt(self):
         payload = {
-            'usuario_id': self.id,
+            'sub': self.id,
             'nombre': self.nombre,
             'apellido': self.apellido,
             'rol': self.rol,
-            # Expira en 1 hora desde ahora
-            'exp': datetime.utcnow() + timedelta(hours=1)  
+            'exp': datetime.utcnow() + timedelta(hours=1)
         }
-        return jwt.encode(payload, 'JWT_SECRET_KEY', algorithm='HS256')
-
+        return jwt.encode(payload, os.getenv('JWT_SECRET_KEY'), algorithm='HS256')
 
 
     """
-        Funcion find_by_email(email)
-        Busca un usuario por su correo electrónico en la base de datos y devuelve un objeto Usuario si lo encuentra.
-
-        Args:
-        - email (str): Correo electrónico del usuario.
-
-        Returns:
-        - Usuario or None: Objeto Usuario si se encuentra en la base de datos, None si no se encuentra.
+    find_by_email(email): Método estático para buscar un usuario por su email en la base de datos.
+        urns:
+        - Usuario: Objeto Usuario si se encuentra en la base de datos, None si no se encuentra.
     """
     @staticmethod
     def find_by_email(email):
+        # Busca un usuario por su email en la base de datos.
         query = "SELECT id, nombre, apellido, fecha_nacimiento, email, telefono, nacionalidad, domicilio, rol, password FROM usuarios WHERE email = %s"
         db = get_db()
         cursor = db.cursor(dictionary=True)
@@ -99,27 +70,23 @@ class Usuario:
             return Usuario(**user_data)
         else:
             return None
-    
-    
+        
     """
-        Funcion save(self)
-        Guarda el usuario en la base de datos.
-    """
+    save(): Guarda el usuario actual en la base de datos.
+    """   
     def save(self):
+        
         db = get_db()
         cursor = db.cursor()
         cursor.execute('INSERT INTO usuarios (nombre, apellido, fecha_nacimiento, email, password, telefono, nacionalidad, domicilio, rol) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                    (self.nombre, self.apellido, self.fecha_nacimiento, self.email, self.password, self.telefono, self.nacionalidad, self.domicilio, self.rol))
+                       (self.nombre, self.apellido, self.fecha_nacimiento, self.email, self.password, self.telefono, self.nacionalidad, self.domicilio, self.rol))
         db.commit()
         cursor.close()
-
-
+        
+        
     """
-        Funcion serialize(self)
-        Devuelve una representación serializada del usuario en forma de diccionario.
-
-        Returns:
-        - dict: Diccionario con los datos del usuario serializados.
+    serialize(): Retorna una representación serializada del usuario en forma de diccionario.
+        Retorna una representación serializada del usuario en forma de diccionario.
     """
     def serialize(self):
         return {
@@ -135,13 +102,10 @@ class Usuario:
         }
 
 
-
     """
-        Funcion get_all_users()
-        Obtiene todos los usuarios registrados en la base de datos y los devuelve como una lista de diccionarios serializados.
-
-        Returns:
-        - list: Lista de diccionarios con los datos de todos los usuarios serializados.
+    get_all_users(): Método estático que obtiene todos los usuarios almacenados en la base de datos.
+        Retorna una lista de todos los usuarios alamacenados en la db, 
+        de los usuarios serializados como dicionario por la funcion (serialize)
     """
     @staticmethod
     def get_all_users():
@@ -150,24 +114,8 @@ class Usuario:
         query = "SELECT id, nombre, apellido, fecha_nacimiento, email, telefono, nacionalidad, domicilio, rol FROM usuarios"
         cursor.execute(query)
         rows = cursor.fetchall()
-
-        users = [
-            Usuario(
-                id=row['id'],
-                nombre=row['nombre'],
-                apellido=row['apellido'],
-                fecha_nacimiento=row['fecha_nacimiento'],
-                email=row['email'],
-                # No incluir la contraseña en la serialización
-                password=None,  
-                telefono=row['telefono'],
-                nacionalidad=row['nacionalidad'],
-                domicilio=row['domicilio'],
-                rol=row['rol']
-                # Serializar cada usuario y agregarlo a la lista
-            ).serialize()  
-            for row in rows
-        ]
-
+        users = [Usuario(id=row['id'], nombre=row['nombre'], apellido=row['apellido'], fecha_nacimiento=row['fecha_nacimiento'],
+                         email=row['email'], password=None, telefono=row['telefono'], nacionalidad=row['nacionalidad'],
+                         domicilio=row['domicilio'], rol=row['rol']).serialize() for row in rows]
         cursor.close()
         return users

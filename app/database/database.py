@@ -29,12 +29,8 @@ def get_db():
     return g.db
 
 
-"""
-    Cierra la conexión a la base de datos.
 
-    Args:
-    - e: Parámetro opcional, no utilizado en esta función.
-"""
+#Cierra la conexión a la base de datos.
 def close_db(e=None):
     db = g.pop('db', None)
     if db is not None:
@@ -44,7 +40,6 @@ def close_db(e=None):
 """
     Inicializa la aplicación para el manejo de la base de datos.
 
-    Args:
     - app: Instancia de la aplicación Flask.
 """
 def init_app(app):
