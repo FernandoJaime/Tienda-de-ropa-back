@@ -57,12 +57,12 @@ def delete_product_endpoint(producto_id):
 
 # Endpoint para actualizar un producto por su ID
 @product_bp.route('/editar/<int:cod_producto>', methods=['PUT'])
-@jwt_required()  # Protegido por autenticación JWT
-def update_product_endpoint(producto_id):
-    data = request.json
+@jwt_required()
+def update_product_endpoint(cod_producto):
 
     try:
-        updated_product = update_product(producto_id, data)
+        data = request.json
+        updated_product = update_product(cod_producto, data)
         if updated_product:
             return jsonify(updated_product.serialize()), 200
         else:
@@ -70,12 +70,14 @@ def update_product_endpoint(producto_id):
     except Exception as e:
         return jsonify({"msg": f"Error en el servidor: {str(e)}"}), 500
 
+
 # Endpoint para obtener un producto por su ID
 @product_bp.route('/<int:cod_producto>', methods=['GET'])
 @jwt_required()  # Protegido por autenticación JWT
-def get_product_by_id_endpoint(producto_id):
+def get_product_by_id_endpoint(cod_producto):
+    
     try:
-        product = get_product_by_id(producto_id)
+        product = get_product_by_id(cod_producto)
         if product:
             return jsonify(product.serialize()), 200
         else:

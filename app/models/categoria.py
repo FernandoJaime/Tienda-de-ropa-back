@@ -16,7 +16,7 @@ class Categoria:
     def get_all_categories():
         db = get_db()
         cursor = db.cursor(dictionary=True)
-        query = "SELECT * FROM categorias"
+        query = "SELECT * FROM Categorias"
         cursor.execute(query)
         rows = cursor.fetchall()
         categories = [Categoria(cod_categoria=row['cod_categoria'], nom_categoria=row['nom_categoria']).serialize() for row in rows]
@@ -27,7 +27,7 @@ class Categoria:
     def get_cat_by_id(cod_categoria):
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM categorias WHERE cod_categoria = %s", (cod_categoria,))
+        cursor.execute("SELECT * FROM Categorias WHERE cod_categoria = %s", (cod_categoria,))
         row = cursor.fetchone()
         cursor.close()
         if row:
