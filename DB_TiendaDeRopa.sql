@@ -1,11 +1,11 @@
+#usuarios
+
 -- Creacion de la base de datos --
 create database DB_TiendaDeRopa
 
-use DB_TiendaDeRopa
 
 -- Explicacion configuraciones de las tablas --
 	-- engine = InnoDB (declaración CREATE TABLE de MySQL especifica el motor de almacenamiento que se utilizará)
-	-- auto_increment = 18 (utilizamos 18 por el jwt tokken usado en el modulo de seguridad)
 	-- default charset = utf8mb4 (soporta caracteres de 4 bytes, acepta caracteres especiales)
 	-- collate = utf8mb4_unicode_ci (insensible a mayúsculas, minúsculas y acentos y sigue las reglas de Unicode)
 
@@ -28,14 +28,15 @@ cod_categoria int primary key,
 nom_categoria varchar(50) not null
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_unicode_ci; 
 
+
 create table Productos (
-cod_producto int primary key, 
+cod_producto int primary key auto_increment, 
 cod_categoria int not null,
 foreign key (cod_categoria) references Categorias(cod_categoria),
 tipo_producto varchar(80) not null,
 nom_producto varchar(80) not null,
 precio_unitario decimal(10,2) not null,
-img_producto varchar(250), 
+img_producto varchar(1000), 
 stock_pro int not null, 
 descripcion_pro varchar(100)
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_unicode_ci; 
@@ -49,7 +50,7 @@ insert into Categorias values
 (1,'Niños'),
 (2, 'Mujeres'),
 (3, 'Hombres'),
-(4, 'Calzado')
+(4, 'Calzado');
 
 insert into Productos (cod_producto, cod_categoria, tipo_producto, nom_producto, precio_unitario, img_producto, stock_pro, descripcion_pro) values
 (1, 1, 'Conjunto', 'Conjunto verano', 10.50, '../static/img/niños-1.webp', 50, 'Remera manga cortas y pantalon corto, color verde'),
